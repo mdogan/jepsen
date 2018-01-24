@@ -29,7 +29,7 @@
         _       (doseq [member members]
                   (info "Adding " member " to raft group")
                   (.add memberlist (RaftMember. (str member ":5701") member)))
-        _ (.setMembers raftConfig memberlist)          
+        _ (.setMembers raftConfig memberlist)
 
         _ (.setLeaderElectionTimeoutInMillis raftConfig 1000)
         _ (.setLeaderHeartbeatPeriodInMillis raftConfig 1500)
@@ -42,7 +42,7 @@
         _ (.setName serviceConfig com.hazelcast.raft.impl.service.RaftService/SERVICE_NAME)
         _ (.setClassName serviceConfig (.getName com.hazelcast.raft.impl.service.RaftService))
         _ (.setConfigObject serviceConfig raftConfig)
-      ] 
+      ]
     serviceConfig))
 
 (defn prepareAtomicLongServiceConfig
@@ -52,6 +52,16 @@
         _ (.setEnabled serviceConfig true)
         _ (.setName serviceConfig com.hazelcast.raft.service.atomiclong.RaftAtomicLongService/SERVICE_NAME)
         _ (.setClassName serviceConfig (.getName com.hazelcast.raft.service.atomiclong.RaftAtomicLongService))
+        ]
+    serviceConfig))
+
+(defn prepareLockServiceConfig
+  "Prepare Raft Lock service config"
+  []
+  (let [serviceConfig (ServiceConfig.)
+        _ (.setEnabled serviceConfig true)
+        _ (.setName serviceConfig com.hazelcast.raft.service.lock.RaftLockService/SERVICE_NAME)
+        _ (.setClassName serviceConfig (.getName com.hazelcast.raft.service.lock.RaftLockService))
         ]
     serviceConfig))
 
@@ -86,6 +96,7 @@
         servicesConfig (.getServicesConfig config)
         _ (.addServiceConfig servicesConfig (prepareRaftServiceConfig members))
         _ (.addServiceConfig servicesConfig (prepareAtomicLongServiceConfig))
+        _ (.addServiceConfig servicesConfig (prepareLockServiceConfig))
 
         ; Quorum for split-brain protection
         quorum (doto (QuorumConfig.)
