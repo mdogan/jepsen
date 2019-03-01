@@ -138,9 +138,9 @@
          :generator (->> (gen/mix [r w])
             (gen/stagger 1/10)
             (gen/nemesis
-                (gen/seq (cycle [(gen/sleep 5)
+                (gen/seq (cycle [(gen/sleep 20)
                     {:type :info, :f :start}
-                    (gen/sleep 1)
+                    (gen/sleep 20)
                     {:type :info, :f :stop}])))
             (gen/time-limit (:time-limit opts)))}))
 
