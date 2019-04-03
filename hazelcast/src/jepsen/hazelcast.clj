@@ -102,7 +102,7 @@
     (setup! [_ test node]
       (build-server! test node)
       (jepsen/synchronize test)
-      (debian/install-jdk8!)
+      (debian/install [:openjdk-8-jdk])
       (install!)
       (start! test node)
       (Thread/sleep 15000))
@@ -671,8 +671,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 1/10))
-                                  :checker   (checker/linearizable)
-                                  :model     (model/mutex)}
+                                  :checker   (checker/linearizable {:model     (model/mutex)})}
    :lock-no-quorum               {:client    (lock-client "jepsen.lock.no-quorum")
                                   :generator (->> [{:type :invoke, :f :acquire}
                                                    {:type :invoke, :f :release}]
@@ -680,8 +679,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 1/10))
-                                  :checker   (checker/linearizable)
-                                  :model     (model/mutex)}
+                                  :checker   (checker/linearizable {:model     (model/mutex)})}
    :non-reentrant-cp-lock        {:client    (fenced-lock-client "jepsen.cpLock1")
                                   :generator (->> [{:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
                                                    {:type :invoke, :f :release :value (.toString (UUID/randomUUID))}]
@@ -689,8 +687,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 0.5))
-                                  :checker   (checker/linearizable)
-                                  :model     (create-owner-aware-mutex client-uids-to-client-names-map)}
+                                  :checker   (checker/linearizable {:model     (create-owner-aware-mutex client-uids-to-client-names-map)})}
    :reentrant-cp-lock            {:client    (fenced-lock-client "jepsen.cpLock2")
                                   :generator (->> [{:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
                                                    {:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
@@ -700,8 +697,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 0.5))
-                                  :checker   (checker/linearizable)
-                                  :model     (create-reentrant-mutex client-uids-to-client-names-map)}
+                                  :checker   (checker/linearizable {:model     (create-reentrant-mutex client-uids-to-client-names-map)})}
    :non-reentrant-fenced-lock    {:client    (fenced-lock-client "jepsen.cpLock1")
                                   :generator (->> [{:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
                                                    {:type :invoke, :f :release :value (.toString (UUID/randomUUID))}]
@@ -709,8 +705,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 1))
-                                  :checker   (checker/linearizable)
-                                  :model     (create-fenced-mutex client-uids-to-client-names-map)}
+                                  :checker   (checker/linearizable {:model     (create-fenced-mutex client-uids-to-client-names-map)})}
    :reentrant-fenced-lock        {:client    (fenced-lock-client "jepsen.cpLock2")
                                   :generator (->> [{:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
                                                    {:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
@@ -720,8 +715,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 1))
-                                  :checker   (checker/linearizable)
-                                  :model     (create-reentrant-fenced-mutex client-uids-to-client-names-map)}
+                                  :checker   (checker/linearizable {:model     (create-reentrant-fenced-mutex client-uids-to-client-names-map)})}
    :cp-semaphore {:client        (cp-semaphore-client)
                                   :generator (->> [{:type :invoke, :f :acquire :value (.toString (UUID/randomUUID))}
                                                    {:type :invoke, :f :release :value (.toString (UUID/randomUUID))}]
@@ -729,8 +723,7 @@
                                                   gen/seq
                                                   gen/each
                                                   (gen/stagger 0.5))
-                                  :checker   (checker/linearizable)
-                                  :model     (create-acquired-permits-model client-uids-to-client-names-map)}
+                                  :checker   (checker/linearizable {:model     (create-acquired-permits-model client-uids-to-client-names-map)})}
    :cp-id-gen-long               {:client    (cp-atomic-long-id-client nil nil)
                                   :generator (->> {:type :invoke, :f :generate}
                                                 (gen/stagger 0.5))
@@ -742,8 +735,7 @@
                                                             {:type :invoke, :f :cas, :value [(rand-int 5) (rand-int 5)]}])
                                                 gen/each
                                                 (gen/stagger 0.5))
-                                  :checker   (checker/linearizable)
-                                  :model     (model/cas-register 0)}
+                                  :checker   (checker/linearizable {:model     (model/cas-register 0)})}
    :cp-cas-reference             {:client    (cp-cas-reference-client nil nil)
                                   :generator (->> (gen/mix [{:type :invoke, :f :read}
                                                             {:type :invoke, :f :write, :value (rand-int 5)}
@@ -751,8 +743,7 @@
                                                             {:type :invoke, :f :cas, :value [(rand-int 5) (rand-int 5)]}])
                                                   gen/each
                                                   (gen/stagger 0.5))
-                                  :checker   (checker/linearizable)
-                                  :model     (model/cas-register 0)}
+                                  :checker   (checker/linearizable {:model     (model/cas-register 0)})}
    :queue                        (assoc (queue-client-and-gens)
                                    :checker (checker/total-queue))
    :atomic-ref-ids               {:client    (atomic-ref-id-client nil nil)
