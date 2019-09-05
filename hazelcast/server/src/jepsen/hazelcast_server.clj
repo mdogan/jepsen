@@ -5,24 +5,27 @@
             [clojure.java.io :as io]
             [clojure.string :as str])
   (:import (com.hazelcast.core Hazelcast)
-           (com.hazelcast.config.cp FencedLockConfig CPSemaphoreConfig)
+           (com.hazelcast.config.cp FencedLockConfig SemaphoreConfig CPSubsystemConfig)
            (com.hazelcast.config Config
-                                 LockConfig
                                  MapConfig
-                                 QuorumConfig)
+                                 MergePolicyConfig
+                                 SplitBrainProtectionConfig)
            ))
 
 (def opt-spec
-  [["-m" "--members MEMBER-LIST" "Comma-separated list of peers to connect to"
-    :parse-fn (fn [m]
-                  (str/split m #"\s*,\s*"))]])
+[["-m" "--members MEMBER-LIST" "Comma-separated list of peers to connect to"
+  :parse-fn (fn [m]
+                (str/split m #"\s*,\s*"))],
+ [nil "--persistent PERSISTENT" "Is persistence enabled?"],
+ [nil "--license LICENSE" "Hazelcast Enterprise License"]])
+
 
 (defn prepare-cp-subsystem-config
   "Prepare Hazelcast CPSubsystemConfig"
-  [config members]
+  [config members persistent]
   (let [cpSubsystemConfig (.getCPSubsystemConfig config)
         raftAlgorithmConfig (.getRaftAlgorithmConfig cpSubsystemConfig)
-        semaphoreConfig (CPSemaphoreConfig. "jepsen.cpSemaphore" false)
+        semaphoreConfig (SemaphoreConfig. "jepsen.cpSemaphore" false)
         lockConfig1 (FencedLockConfig. "jepsen.cpLock1" 1)
         lockConfig2 (FencedLockConfig. "jepsen.cpLock2" 2)]
 
@@ -34,6 +37,8 @@
        (.setCPMemberCount cpSubsystemConfig (count members))
        (.setSessionHeartbeatIntervalSeconds cpSubsystemConfig 5)
        (.setSessionTimeToLiveSeconds cpSubsystemConfig 300)
+
+       (.setPersistenceEnabled cpSubsystemConfig (= persistent "true"))
 
        (.addSemaphoreConfig cpSubsystemConfig semaphoreConfig)
        (.addLockConfig cpSubsystemConfig lockConfig1)
@@ -49,6 +54,8 @@
                 errors]} (cli/parse-opts args opt-spec)
         config  (Config.)
         members (:members options)
+
+        _ (.setProperty config "hazelcast.enterprise.license.key" (:license options))
 
         ; Timeouts
         _ (.setProperty config "hazelcast.client.max.no.heartbeat.seconds" "90")
@@ -68,41 +75,38 @@
         _       (.setEnabled tcp-ip true)
 
         ; prepare the CP subsystem
-        _ (prepare-cp-subsystem-config config members)
+        _ (prepare-cp-subsystem-config config members (:persistent options))
 
         ; Quorum for split-brain protection
-        quorum (doto (QuorumConfig.)
+        quorum (doto (SplitBrainProtectionConfig.)
                  (.setName "majority")
                  (.setEnabled true)
-                 (.setSize (inc (int (Math/floor
+                 (.setMinimumClusterSize (inc (int (Math/floor
                                        (/ (inc (count (:members options)))
                                           2))))))
-        _ (.addQuorumConfig config quorum)
-
-        ; Locks
-        lock-config (doto (LockConfig.)
-                      (.setName "jepsen.lock")
-                      (.setQuorumName "majority"))
-        _ (.addLockConfig config lock-config)
+        _ (.addSplitBrainProtectionConfig config quorum)
 
         ; Queues
         queue-config (doto (.getQueueConfig config "jepsen.queue")
                        (.setName "jepsen.queue")
                        (.setBackupCount 2)
-                       (.setQuorumName "majority"))
+                       (.setSplitBrainProtectionName "majority"))
         _ (.addQueueConfig config queue-config)
+
+        merge-policy-config (doto (MergePolicyConfig.)
+                          (.setPolicy
+                            "jepsen.hazelcast_server.SetUnionMergePolicy"))
 
         ; Maps with CRDTs
         crdt-map-config (doto (MapConfig.)
                     (.setName "jepsen.crdt-map")
-                    (.setMergePolicy
-                      "jepsen.hazelcast_server.SetUnionMergePolicy"))
+                    (.setMergePolicyConfig merge-policy-config))
         _ (.addMapConfig config crdt-map-config)
 
         ; Maps without CRDTs
         map-config (doto (MapConfig.)
                      (.setName "jepsen.map")
-                     (.setQuorumName "majority"))
+                     (.setSplitBrainProtectionName "majority"))
         _ (.addMapConfig config map-config)
 
         ; Launch

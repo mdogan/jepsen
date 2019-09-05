@@ -34,12 +34,12 @@ With Hazelcast version 3.12, we released our Jepsen test suite for the CP data s
 test suite, there are other tests written by Kyle Kingsbury to test AP data structures in Hazelcast.
 
 Our CP subsystem test suite is as follows:
-- Non-reentrant lock (`--workload non-reentrant-cp-lock`): In this test case, we test if the new `FencedLock`
+- Non-reentrant lock (`--workload non-reentrant-lock`): In this test case, we test if the new `FencedLock`
 data structure behaves as a non-reentrant mutex, i.e., it can be held by a single endpoint at a time and only the lock
 holder endpoint can release it. Moreover, the lock cannot be acquired by the same endpoint reentrantly. It means that
 while a client holds the lock, it cannot acquire the lock again, without releasing the lock first.
 
-- Reentrant lock (`--workload reentrant-cp-lock`): We test if the new `FencedLock` data structure behaves as a reentrant
+- Reentrant lock (`--workload reentrant-lock`): We test if the new `FencedLock` data structure behaves as a reentrant
 mutex. The lock instance can be held by a single endpoint at a time and only the lock holder endpoint can release it.
 Moreover, the current lock holder can reentrantly acquire the lock one more time. Reentrant lock acquire limit is 2 for
 this test.
@@ -58,14 +58,14 @@ this test.
 - Semaphore (`--workload semaphore`): In this test, we initialize our new linearizable `ISemaphore` with 2 permits. Each
 client acquires and releases a permit in a loop and we validate permits are held by at most 2 clients at a time.
 
-- Unique ID Generation with the new linearizable `IAtomicLong` (`--workload cp-id-gen-long`): In this test,
+- Unique ID Generation with the new linearizable `IAtomicLong` (`--workload id-gen-long`): In this test,
 each client generates a unique long id by using a linearizable `IAtomicLong` instance and we validate uniqueness of
 generated ids.
 
-- Compare-and-swap Register with the new linearizable `IAtomicLong` (`--workload cp-cas-long`): In this test,
+- Compare-and-swap Register with the new linearizable `IAtomicLong` (`--workload cas-long`): In this test,
 clients randomly perform write and compare-and-swap operations.
 
-- Compare-and-swap Register with the new linearizable `IAtomicReference` (`--workload cp-cas-reference`): In this test,
+- Compare-and-swap Register with the new linearizable `IAtomicReference` (`--workload cas-reference`): In this test,
 clients randomly perform write and compare-and-swap operations.
 
 In each test, multiple clients send concurrent operations to a shared data structure, which is replicated
