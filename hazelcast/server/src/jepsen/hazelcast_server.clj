@@ -25,7 +25,7 @@
   [config members persistent]
   (let [cpSubsystemConfig (.getCPSubsystemConfig config)
         raftAlgorithmConfig (.getRaftAlgorithmConfig cpSubsystemConfig)
-        semaphoreConfig (SemaphoreConfig. "jepsen.cpSemaphore" false)
+        semaphoreConfig (SemaphoreConfig. "jepsen.cpSemaphore" false, 0)
         lockConfig1 (FencedLockConfig. "jepsen.cpLock1" 1)
         lockConfig2 (FencedLockConfig. "jepsen.cpLock2" 2)]
 
