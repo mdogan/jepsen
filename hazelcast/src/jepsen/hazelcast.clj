@@ -136,9 +136,8 @@
         _ (info :net net)
 
         _ (doto (.getConnectionRetryConfig (.getConnectionStrategyConfig config))
-          ; Initial connection limits
           ; Try reconnecting indefinitely
-          (.setFailOnMaxBackoff false))
+          (.setClusterConnectTimeoutMillis Long/MAX_VALUE))
 
         ; Only talk to our node (the client's smart and will try to talk to
         ; everyone, but we're trying to simulate clients in different network
