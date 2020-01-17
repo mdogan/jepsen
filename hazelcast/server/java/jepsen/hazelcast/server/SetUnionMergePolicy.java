@@ -9,22 +9,22 @@ import com.hazelcast.spi.merge.SplitBrainMergePolicy;
 import java.io.IOException;
 import java.util.TreeSet;
 
-public class SetUnionMergePolicy implements SplitBrainMergePolicy<Object, MergingValue<Object>>, DataSerializable {
+public class SetUnionMergePolicy implements SplitBrainMergePolicy<Object, MergingValue<Object>, Object>, DataSerializable {
 
   @Override
   public Object merge(MergingValue<Object> mergingEntry, MergingValue<Object> existingEntry) {
     // Merge long arrays as sets
     final long[] a1;
     final long[] a2;
-    if (null == mergingEntry.getDeserializedValue()) {
+    if (null == mergingEntry.getValue()) {
       a1 = new long[0];
     } else {
-      a1 = (long[]) mergingEntry.getDeserializedValue();
+      a1 = (long[]) mergingEntry.getValue();
     }
-    if (null == existingEntry.getDeserializedValue()) {
+    if (null == existingEntry.getValue()) {
       a2 = new long[0];
     } else {
-      a2 = (long[]) existingEntry.getDeserializedValue();
+      a2 = (long[]) existingEntry.getValue();
     }
 
     // Merge arrays
