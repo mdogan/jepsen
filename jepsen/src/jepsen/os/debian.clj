@@ -52,10 +52,7 @@
          (map (fn [line] (str/split line #"\s+")))
          (filter #(= "install" (second %)))
          (map first)
-         (map (fn [p] (str/replace p ":amd64" "")))
-         (map (fn [p] (str/replace p ":i386" "")))
-         ;(map (fn [p] (str/split p #":(?![^:]*:)")))
-         ;(map first)
+         (map (fn [p] (str/replace p #":amd64|:i386" {":amd64" "" ":i386" ""})))
          set)))
 
 (defn uninstall!
