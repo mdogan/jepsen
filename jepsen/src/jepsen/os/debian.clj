@@ -52,6 +52,8 @@
          (map (fn [line] (str/split line #"\s+")))
          (filter #(= "install" (second %)))
          (map first)
+         (map (fn [p] (str/split p #":(?![^:]*:)")))
+         (map first)
          set)))
 
 (defn uninstall!
